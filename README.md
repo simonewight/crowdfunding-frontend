@@ -1,2 +1,2 @@
 ## Crowdfunding Front End
-Fundee
+Fundee front end
