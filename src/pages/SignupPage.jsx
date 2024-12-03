@@ -1,7 +1,7 @@
-import LoginForm from "../components/LoginForm";
+import SignupForm from "../components/SignupForm";
 
-function LoginPage() {
-  return <LoginForm />;
+function SignupPage() {
+  return <SignupForm />;
 }
 
-export default LoginPage;
+export default SignupPage;

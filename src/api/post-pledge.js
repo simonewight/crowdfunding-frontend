@@ -1,19 +1,20 @@
-async function postSignup(username, email, password) {
-    const url = `${import.meta.env.VITE_API_URL}/users/`;
+async function postPledge(amount, comment, anonymous, project) {
+    const url = `${import.meta.env.VITE_API_URL}/pledges/`;
     const response = await fetch(url, {
       method: "POST", // We need to tell the server that we are sending JSON data so we set the Content-Type header to application/json
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        "username": username,
-        "email": email,
-        "password": password,
+        "amount": amount,
+        "comment": comment,
+        "anonymous": anonymous,
+        "project": project,
       }),
     });
   
     if (!response.ok) {
-      const fallbackError = `Error trying to signup`;
+      const fallbackError = `Error trying to pledge`;
   
       const data = await response.json().catch(() => {
         throw new Error(fallbackError);
@@ -26,4 +27,4 @@ async function postSignup(username, email, password) {
     return await response.json();
   }
   
-  export default postSignup;
+  export default postPledge;
