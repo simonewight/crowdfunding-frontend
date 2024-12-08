@@ -1,13 +1,45 @@
-import React from 'react';
-import useProjects from "../hooks/use-projects";
+import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import ProjectCard from "../components/ProjectCard";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Heart, Search, TrendingUp, Users, Menu } from 'lucide-react';
 
 function HomePage() {
-    const { projects } = useProjects(); 
+    const [projects, setProjects] = useState([]);
+    const [error, setError] = useState(null);
+
+    const fetchProjects = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/projects/`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch projects');
+            }
+            
+            const data = await response.json();
+            console.log('Raw project data:', data);
+            setProjects(data);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching projects:', err);
+            setError(err.message);
+        }
+    };
+
+    useEffect(() => {
+        fetchProjects();
+    }, []);
+
+    // Calculate totals
+    const totalFunding = projects.reduce((total, project) => {
+        const projectPledges = project.pledges || [];
+        return total + projectPledges.reduce((sum, pledge) => sum + Number(pledge.amount), 0);
+    }, 0);
+
+    const totalBackers = projects.reduce((total, project) => {
+        const projectPledges = project.pledges || [];
+        return total + projectPledges.length;
+    }, 0);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -42,7 +74,7 @@ function HomePage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                         <div>
                             <div className="text-2xl font-bold text-indigo-600">
-                                ${projects.reduce((total, project) => total + project.amount_pledged, 0).toLocaleString()}
+                                ${totalFunding.toLocaleString()}
                             </div>
                             <div className="text-gray-600">Total Funded</div>
                         </div>
@@ -54,8 +86,7 @@ function HomePage() {
                         </div>
                         <div>
                             <div className="text-2xl font-bold text-indigo-600">
-                                {projects.reduce((total, project) => 
-                                    total + (project.pledges?.length || 0), 0)}+
+                                {totalBackers}+
                             </div>
                             <div className="text-gray-600">Total Backers</div>
                         </div>
@@ -75,8 +106,8 @@ function HomePage() {
                         <p className="text-gray-600 mt-2">Support these amazing projects making a difference</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {projects.map((projectData, key) => (
-                            <ProjectCard key={key} projectData={projectData} />
+                        {projects.map((projectData) => (
+                            <ProjectCard key={projectData.id} projectData={projectData} />
                         ))}
                     </div>
                 </div>

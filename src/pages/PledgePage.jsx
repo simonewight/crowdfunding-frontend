@@ -54,8 +54,16 @@ function PledgePage() {
                 }
             );
 
-            const responseData = await response.json();
-            console.log('Server response:', responseData);
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Server response:', data);
+                
+                // Redirect back to the project page with success flag
+                navigate(`/project/${id}`, { 
+                    state: { pledgeSuccess: true },
+                    replace: true  // This prevents back button issues
+                });
+            }
 
             if (!response.ok) {
                 throw new Error(

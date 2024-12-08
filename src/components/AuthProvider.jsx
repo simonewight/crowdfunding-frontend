@@ -1,12 +1,9 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 
-// Export the context so other files can import it
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-    const [auth, setAuth] = useState({
-        token: window.localStorage.getItem("token"),
-    });
+    const [auth, setAuth] = useState({ token: window.localStorage.getItem("token") });
 
     return (
         <AuthContext.Provider value={{ auth, setAuth }}>

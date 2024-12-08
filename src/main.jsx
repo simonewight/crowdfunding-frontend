@@ -1,15 +1,16 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import ProjectPage from "./pages/ProjectPage";
+import NavBar from "./components/NavBar";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import PledgePage from "./pages/PledgePage";
+import ProjectList from "./pages/ProjectList";
+import CreateProjectPage from "./pages/CreateProjectPage";
+import { AuthProvider } from "./components/AuthProvider";
 import "./index.css";
-import HomePage from "./pages/HomePage.jsx";
-import ProjectPage from "./pages/ProjectPage.jsx";
-import LoginPage from "./pages/LoginPage.jsx";
-import CreateProjectPage from "./pages/CreateProjectPage.jsx";
-import PledgePage from "./pages/PledgePage.jsx";
-import NavBar from "./components/NavBar.jsx";
-import SignupPage from "./pages/SignupPage.jsx";
-import { AuthProvider } from "./components/AuthProvider.jsx";
 
 const router = createBrowserRouter([
     {
@@ -21,6 +22,18 @@ const router = createBrowserRouter([
                 element: <HomePage />,
             },
             {
+                path: "/project/:id",
+                element: <ProjectPage />,
+            },
+            {
+                path: "/projects",
+                element: <ProjectList />,
+            },
+            {
+                path: "/pledge/:id",
+                element: <PledgePage />,
+            },
+            {
                 path: "/login",
                 element: <LoginPage />,
             },
@@ -29,16 +42,8 @@ const router = createBrowserRouter([
                 element: <SignupPage />,
             },
             {
-                path: "/project/:id",
-                element: <ProjectPage />,
-            },
-            {
                 path: "/create-project",
                 element: <CreateProjectPage />,
-            },
-            {
-                path: "/pledge/:id",
-                element: <PledgePage />,
             },
         ],
     },

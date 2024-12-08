@@ -15,7 +15,7 @@ function NavBar() {
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="flex justify-between h-16">
                         <div className="flex space-x-7">
-                            <div className="flex items-center">
+                            <div className="flex items-center space-x-4">
                                 <Link to="/" className="text-lg font-semibold">
                                     Fundee
                                 </Link>

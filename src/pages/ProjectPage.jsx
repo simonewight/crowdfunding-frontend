@@ -5,55 +5,49 @@ function ProjectPage() {
     const [project, setProject] = useState({ pledges: [] });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [refreshKey, setRefreshKey] = useState(0); // For forcing refresh
     const { id } = useParams();
     const location = useLocation();
     const [showSuccess, setShowSuccess] = useState(false);
 
-    // Check if we're returning from a successful pledge
+    // Fetch project data
+    const fetchProject = async () => {
+        try {
+            setIsLoading(true);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/projects/${id}/`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch project');
+            }
+            
+            const data = await response.json();
+            console.log('Project data:', data);
+            setProject(data);
+        } catch (err) {
+            console.error('Error:', err);
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Initial fetch and pledge success handling
     useEffect(() => {
+        fetchProject();
+        
         if (location.state?.pledgeSuccess) {
             setShowSuccess(true);
-            setRefreshKey(prev => prev + 1); // Force refresh when returning from pledge
+            // Fetch once more after a short delay to get updated data
+            setTimeout(fetchProject, 1000);
             // Hide success message after 5 seconds
             const timer = setTimeout(() => setShowSuccess(false), 5000);
             return () => clearTimeout(timer);
         }
-    }, [location]);
+    }, [id, location]);
 
     // Calculate total pledges
     const calculateTotalPledges = (pledges) => {
         return pledges.reduce((total, pledge) => total + Number(pledge.amount), 0);
     };
-
-    // Fetch project data
-    useEffect(() => {
-        const fetchProject = async () => {
-            try {
-                setIsLoading(true);
-                const response = await fetch(
-                    `${import.meta.env.VITE_API_URL}/projects/${id}/`
-                );
-                if (!response.ok) {
-                    throw new Error('Failed to fetch project');
-                }
-                const data = await response.json();
-                // Calculate total pledges if sum_pledges is not provided
-                if (!data.sum_pledges && data.pledges) {
-                    data.sum_pledges = calculateTotalPledges(data.pledges);
-                }
-                console.log('Project data:', data); // Debug log
-                setProject(data);
-            } catch (err) {
-                console.error('Error:', err);
-                setError(err.message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchProject();
-    }, [id, refreshKey]); // refreshKey triggers re-fetch
 
     // Calculate days remaining
     const getDaysRemaining = () => {
@@ -102,7 +96,7 @@ function ProjectPage() {
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <p className="text-center text-red-600">Error: {error}</p>
                     <button 
-                        onClick={() => setRefreshKey(prev => prev + 1)} 
+                        onClick={() => fetchProject()} 
                         className="text-indigo-600 hover:text-indigo-500 block text-center mt-4"
                     >
                         Try Again

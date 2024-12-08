@@ -18,9 +18,19 @@ function LoginPage() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        
+        // Log the URL and credentials being sent (remove password in production)
+        console.log('Attempting to login with URL:', `${import.meta.env.VITE_API_URL}/api-token-auth/`);
+        console.log('Username:', credentials.username);
+        
         try {
+            // Check if VITE_API_URL is defined
+            if (!import.meta.env.VITE_API_URL) {
+                throw new Error('API URL is not defined in environment variables');
+            }
+
             const response = await fetch(
-                `${import.meta.env.VITE_API_URL}api-token-auth/`,
+                `${import.meta.env.VITE_API_URL}/api-token-auth/`,
                 {
                     method: "post",
                     headers: {
@@ -29,16 +39,37 @@ function LoginPage() {
                     body: JSON.stringify(credentials),
                 }
             );
+
+            // Log response details
+            console.log('Response received:', {
+                status: response.status,
+                ok: response.ok,
+                statusText: response.statusText
+            });
+
             const data = await response.json();
+            console.log('Response data:', data);
+
             if (response.ok) {
                 window.localStorage.setItem("token", data.token);
                 navigate("/");
             } else {
-                alert("Invalid username or password");
+                const errorMessage = data.detail || "Invalid username or password";
+                alert(errorMessage);
             }
         } catch (err) {
-            console.error(err);
-            alert("Something went wrong. Please try again later.");
+            console.error('Detailed error:', {
+                message: err.message,
+                stack: err.stack,
+                name: err.name
+            });
+            
+            // More user-friendly error message
+            if (err.message.includes('Failed to fetch') || err.message.includes('ERR_NAME_NOT_RESOLVED')) {
+                alert("Unable to connect to the server. Please check your internet connection and try again.");
+            } else {
+                alert("Something went wrong. Please try again later.");
+            }
         }
     };
 
