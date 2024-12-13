@@ -6,11 +6,68 @@ function PledgePage() {
     const { id } = useParams();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [showSuccess, setShowSuccess] = useState(false);
     const [pledgeData, setPledgeData] = useState({
         amount: "",
         comment: "",
         anonymous: false,
     });
+
+    // Add confetti function
+    const launchConfetti = () => {
+        const colors = ['#7b5cff', '#5c86ff', '#b3c7ff'];
+        const canvas = document.createElement('canvas');
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.zIndex = '999';
+        canvas.style.pointerEvents = 'none';
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const pieces = [];
+        const numberOfPieces = 100;
+
+        for (let i = 0; i < numberOfPieces; i++) {
+            pieces.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                size: Math.random() * 10 + 5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                vx: (Math.random() - 0.5) * 15,
+                vy: -Math.random() * 15 - 5,
+                gravity: 0.5
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            pieces.forEach(piece => {
+                piece.x += piece.vx;
+                piece.y += piece.vy;
+                piece.vy += piece.gravity;
+
+                ctx.beginPath();
+                ctx.fillStyle = piece.color;
+                ctx.arc(piece.x, piece.y, piece.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            if (pieces.some(piece => piece.y < canvas.height)) {
+                requestAnimationFrame(animate);
+            } else {
+                document.body.removeChild(canvas);
+            }
+        }
+
+        animate();
+    };
 
     const handleChange = (event) => {
         const { id, value, type, checked } = event.target;
@@ -55,28 +112,25 @@ function PledgePage() {
             );
 
             if (response.ok) {
-                const data = await response.json();
-                console.log('Server response:', data);
-                
-                // Redirect back to the project page with success flag
-                navigate(`/project/${id}`, { 
-                    state: { pledgeSuccess: true },
-                    replace: true  // This prevents back button issues
-                });
-            }
+                // Show success message and launch confetti
+                setShowSuccess(true);
+                launchConfetti();
 
-            if (!response.ok) {
+                // Wait 2 seconds before navigating
+                setTimeout(() => {
+                    navigate(`/project/${id}`, { 
+                        state: { pledgeSuccess: true },
+                        replace: true
+                    });
+                }, 2000);
+            } else {
+                const responseData = await response.json();
                 throw new Error(
                     responseData.detail || 
                     Object.values(responseData).flat().join(', ') || 
                     "Failed to create pledge"
                 );
             }
-
-            // Success! Redirect to project page
-            navigate(`/project/${id}`, {
-              state: { pledgeSuccess: true }
-            });
         } catch (err) {
             console.error("Error details:", err);
             setError(err.message || "Something went wrong. Please try again.");
@@ -87,6 +141,20 @@ function PledgePage() {
 
     return (
         <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
+            {/* Success Message */}
+            {showSuccess && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-xl text-center">
+                        <h2 className="text-2xl font-bold text-green-600 mb-4">
+                            🎉 Thank You! 🎉
+                        </h2>
+                        <p className="text-gray-700">
+                            Your pledge has been received!
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className="relative py-3 sm:max-w-xl sm:mx-auto">
                 <div className="relative px-4 py-10 bg-white mx-8 md:mx-0 shadow rounded-3xl sm:p-10">
                     <div className="max-w-md mx-auto">

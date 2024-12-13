@@ -1,17 +1,34 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-    const [auth, setAuth] = useState({ token: window.localStorage.getItem("token") });
+    const [auth, setAuth] = useState(() => {
+        const token = window.localStorage.getItem("token");
+        const username = window.localStorage.getItem("username");
+        const userId = window.localStorage.getItem("userId");
+        
+        console.log("AuthProvider initializing with:", {
+            token,
+            username,
+            userId
+        });
+        
+        return {
+            token,
+            username,
+            userId
+        };
+    });
+
+    // Debug log whenever auth changes
+    useEffect(() => {
+        console.log("Auth state changed:", auth);
+    }, [auth]);
 
     return (
         <AuthContext.Provider value={{ auth, setAuth }}>
             {children}
         </AuthContext.Provider>
     );
-}
-
-export function useAuth() {
-    return useContext(AuthContext);
 }

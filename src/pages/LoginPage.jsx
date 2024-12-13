@@ -1,12 +1,15 @@
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../hooks/use-auth";
 
 function LoginPage() {
     const navigate = useNavigate();
+    const { auth, setAuth } = useAuth();
     const [credentials, setCredentials] = useState({
         username: "",
         password: "",
     });
+    const [error, setError] = useState("");
 
     const handleChange = (event) => {
         const { id, value } = event.target;
@@ -19,107 +22,100 @@ function LoginPage() {
     const handleSubmit = async (event) => {
         event.preventDefault();
         
-        // Log the URL and credentials being sent (remove password in production)
-        console.log('Attempting to login with URL:', `${import.meta.env.VITE_API_URL}/api-token-auth/`);
-        console.log('Username:', credentials.username);
-        
         try {
-            // Check if VITE_API_URL is defined
-            if (!import.meta.env.VITE_API_URL) {
-                throw new Error('API URL is not defined in environment variables');
-            }
-
-            const response = await fetch(
-                `${import.meta.env.VITE_API_URL}/api-token-auth/`,
-                {
-                    method: "post",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(credentials),
-                }
-            );
-
-            // Log response details
-            console.log('Response received:', {
-                status: response.status,
-                ok: response.ok,
-                statusText: response.statusText
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api-token-auth/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(credentials),
             });
 
             const data = await response.json();
-            console.log('Response data:', data);
+            console.log("Auth response data:", data);
 
             if (response.ok) {
+                // Store auth data
                 window.localStorage.setItem("token", data.token);
+                window.localStorage.setItem("username", credentials.username);
+
+                // Update auth context
+                setAuth({
+                    token: data.token,
+                    username: credentials.username
+                });
+
+                // Navigate to home page
                 navigate("/");
             } else {
-                const errorMessage = data.detail || "Invalid username or password";
-                alert(errorMessage);
+                setError(data.non_field_errors?.[0] || "Login failed");
             }
         } catch (err) {
-            console.error('Detailed error:', {
-                message: err.message,
-                stack: err.stack,
-                name: err.name
-            });
-            
-            // More user-friendly error message
-            if (err.message.includes('Failed to fetch') || err.message.includes('ERR_NAME_NOT_RESOLVED')) {
-                alert("Unable to connect to the server. Please check your internet connection and try again.");
-            } else {
-                alert("Something went wrong. Please try again later.");
-            }
+            console.error("Error during login:", err);
+            setError("Something went wrong. Please try again later.");
         }
     };
 
     return (
-        <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold mb-6 text-center">Welcome Back</h2>
-            
-            <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                    <label htmlFor="username" className="block mb-2 text-gray-700">
-                        Username:
-                    </label>
-                    <input
-                        type="text"
-                        id="username"
-                        value={credentials.username}
-                        onChange={handleChange}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        required
-                    />
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Sign in to your account
+                </h2>
+            </div>
+
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                                Username
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    id="username"
+                                    type="text"
+                                    required
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    onChange={handleChange}
+                                    value={credentials.username}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                Password
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    id="password"
+                                    type="password"
+                                    required
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    onChange={handleChange}
+                                    value={credentials.password}
+                                />
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="text-red-600 text-sm">
+                                {error}
+                            </div>
+                        )}
+
+                        <div>
+                            <button
+                                type="submit"
+                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            >
+                                Sign in
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                <div className="mb-6">
-                    <label htmlFor="password" className="block mb-2 text-gray-700">
-                        Password:
-                    </label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={credentials.password}
-                        onChange={handleChange}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        required
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition-colors"
-                >
-                    Sign In
-                </button>
-            </form>
-
-            <p className="mt-4 text-center text-gray-600">
-                Don't have an account?{" "}
-                <Link to="/signup" className="text-indigo-600 hover:text-indigo-500">
-                    Sign up
-                </Link>
-            </p>
+            </div>
         </div>
     );
 }

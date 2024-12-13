@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 function CreateProjectPage() {
@@ -14,6 +14,7 @@ function CreateProjectPage() {
     });
     const [imagePreview, setImagePreview] = useState(null);
     const [error, setError] = useState(null);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     const categories = [
         "Technology",
@@ -27,6 +28,61 @@ function CreateProjectPage() {
         "Design",
         "Other"
     ];
+
+    const launchConfetti = () => {
+        const colors = ['#7b5cff', '#5c86ff', '#b3c7ff'];
+        const canvas = document.createElement('canvas');
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.zIndex = '999';
+        canvas.style.pointerEvents = 'none';
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const pieces = [];
+        const numberOfPieces = 100;
+
+        for (let i = 0; i < numberOfPieces; i++) {
+            pieces.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                size: Math.random() * 10 + 5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                vx: (Math.random() - 0.5) * 15,
+                vy: -Math.random() * 15 - 5,
+                gravity: 0.5
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            pieces.forEach(piece => {
+                piece.x += piece.vx;
+                piece.y += piece.vy;
+                piece.vy += piece.gravity;
+
+                ctx.beginPath();
+                ctx.fillStyle = piece.color;
+                ctx.arc(piece.x, piece.y, piece.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            if (pieces.some(piece => piece.y < canvas.height)) {
+                requestAnimationFrame(animate);
+            } else {
+                document.body.removeChild(canvas);
+            }
+        }
+
+        animate();
+    };
 
     const handleChange = (event) => {
         const { id, value } = event.target;
@@ -53,11 +109,20 @@ function CreateProjectPage() {
         setError(null);
         const token = window.localStorage.getItem("token");
 
+        console.log('Raw form data:', projectData);
+
+        const endDate = projectData.date_end 
+            ? new Date(projectData.date_end + 'T23:59:59.999Z').toISOString()
+            : null;
+
         const formattedData = {
             ...projectData,
             goal: Number(projectData.goal),
-            is_open: true
+            is_open: true,
+            date_end: endDate
         };
+
+        console.log('Sending to API:', formattedData);
 
         try {
             const response = await fetch(
@@ -73,8 +138,15 @@ function CreateProjectPage() {
             );
 
             const data = await response.json();
+            console.log('API Response:', data);
+
             if (response.ok) {
-                navigate("/");
+                setShowSuccess(true);
+                launchConfetti();
+                
+                setTimeout(() => {
+                    navigate("/");
+                }, 2000);
             } else {
                 const errorMessage = typeof data === 'object' 
                     ? Object.entries(data).map(([key, value]) => `${key}: ${value}`).join('\n')
@@ -88,7 +160,20 @@ function CreateProjectPage() {
     };
 
     return (
-        <div className="min-h-screen bg-indigo-50 py-10">
+        <div className="min-h-screen bg-indigo-50 py-10 relative">
+            {showSuccess && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-xl text-center">
+                        <h2 className="text-2xl font-bold text-green-600 mb-4">
+                            🎉 Success! 🎉
+                        </h2>
+                        <p className="text-gray-700">
+                            Your project has been created!
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
                 <h2 className="text-2xl font-bold mb-6 text-center">Create a New Project</h2>
                 

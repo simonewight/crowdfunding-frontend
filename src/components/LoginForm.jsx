@@ -21,21 +21,38 @@ function LoginForm() {
       }));
   };
 
-const handleSubmit = (event) => {
-      event.preventDefault();
-      if (credentials.username && credentials.password) {
-          postLogin(
-              credentials.username,
-              credentials.password
-          ).then((response) => {
-            window.localStorage.setItem("token", response.token);
+const handleSubmit = async (event) => {
+    event.preventDefault();
+    
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api-token-auth/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                username: credentials.username,
+                password: credentials.password,
+            }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+            window.localStorage.setItem("token", data.token);
+            window.localStorage.setItem("username", credentials.username);
+            window.localStorage.setItem("userId", data.user_id);
             setAuth({
-      token: response.token,
-  });
+                token: data.token,
+                username: credentials.username,
+                userId: data.user_id,
+            });
             navigate("/");
-          });
-      }
-  };
+        } else {
+            setError(data.non_field_errors?.[0] || "Login failed");
+        }
+    } catch (err) {
+        setError("Something went wrong. Please try again later.");
+    }
+};
 
     return (
       <form>

@@ -9,6 +9,7 @@ import SignupPage from "./pages/SignupPage";
 import PledgePage from "./pages/PledgePage";
 import ProjectList from "./pages/ProjectList";
 import CreateProjectPage from "./pages/CreateProjectPage";
+import EditProjectPage from "./pages/EditProjectPage";
 import { AuthProvider } from "./components/AuthProvider";
 import "./index.css";
 
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
             {
                 path: "/create-project",
                 element: <CreateProjectPage />,
+            },
+            {
+                path: "/project/:id/edit",
+                element: <EditProjectPage />,
             },
         ],
     },
