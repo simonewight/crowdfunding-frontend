@@ -91,46 +91,47 @@ function PledgePage() {
             setError(null);
             
             const pledgePayload = {
-                project: Number(id),
                 amount: Number(pledgeData.amount),
                 comment: pledgeData.comment || "",
                 anonymous: pledgeData.anonymous,
+                project: Number(id),
+                date_created: new Date().toISOString()
             };
             
-            console.log('Submitting pledge with data:', pledgePayload);
+            console.log('Token:', token);
+            console.log('Payload:', pledgePayload);
 
             const response = await fetch(
-                `https://fundee-app-8581d7ef280c.herokuapp.com/pledges/`,
+                "https://fundee-app-8581d7ef280c.herokuapp.com/pledges/",
                 {
-                    method: "post",
+                    method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Token ${token}`,
+                        "Authorization": `Token ${token}`
                     },
-                    body: JSON.stringify(pledgePayload),
+                    body: JSON.stringify(pledgePayload)
                 }
             );
 
-            if (response.ok) {
-                // Show success message and launch confetti
-                setShowSuccess(true);
-                launchConfetti();
+            const responseData = await response.json();
+            console.log('Response:', responseData);
 
-                // Wait 2 seconds before navigating
-                setTimeout(() => {
-                    navigate(`/project/${id}`, { 
-                        state: { pledgeSuccess: true },
-                        replace: true
-                    });
-                }, 2000);
-            } else {
-                const responseData = await response.json();
-                throw new Error(
-                    responseData.detail || 
-                    Object.values(responseData).flat().join(', ') || 
-                    "Failed to create pledge"
-                );
+            if (!response.ok) {
+                throw new Error(JSON.stringify(responseData));
             }
+
+            // Show success message and launch confetti
+            setShowSuccess(true);
+            launchConfetti();
+
+            // Wait 2 seconds before navigating
+            setTimeout(() => {
+                navigate(`/project/${id}`, { 
+                    state: { pledgeSuccess: true },
+                    replace: true
+                });
+            }, 2000);
+
         } catch (err) {
             console.error("Error details:", err);
             setError(err.message || "Something went wrong. Please try again.");

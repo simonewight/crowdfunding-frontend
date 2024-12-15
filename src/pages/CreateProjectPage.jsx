@@ -111,15 +111,12 @@ function CreateProjectPage() {
 
         console.log('Raw form data:', projectData);
 
-        const endDate = projectData.date_end 
-            ? new Date(projectData.date_end + 'T23:59:59.999Z').toISOString()
-            : null;
-
         const formattedData = {
             ...projectData,
             goal: Number(projectData.goal),
             is_open: true,
-            date_end: endDate
+            date_created: new Date().toISOString().split('T')[0],
+            date_end: projectData.date_end
         };
 
         console.log('Sending to API:', formattedData);

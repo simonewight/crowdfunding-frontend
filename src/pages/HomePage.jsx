@@ -10,15 +10,41 @@ function HomePage() {
 
     const fetchProjects = async () => {
         try {
+            console.log('Fetching projects...');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/projects/`);
+            console.log('Response status:', response.status);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch projects');
             }
             
             const data = await response.json();
-            console.log('Raw project data:', data);
+            console.log('Projects data:', data);
+            
+            // Debug each project's pledges
+            data.forEach(project => {
+                console.log(`Project ${project.id} pledges:`, project.pledges);
+            });
+
             setProjects(data);
+            
+            // Debug stats calculations
+            const totalFund = data.reduce((total, project) => {
+                const projectTotal = (project.pledges || []).reduce((sum, pledge) => 
+                    sum + Number(pledge.amount), 0
+                );
+                console.log(`Project ${project.id} total:`, projectTotal);
+                return total + projectTotal;
+            }, 0);
+            console.log('Total funding calculated:', totalFund);
+
+            const backers = data.reduce((total, project) => {
+                const pledgeCount = (project.pledges || []).length;
+                console.log(`Project ${project.id} backers:`, pledgeCount);
+                return total + pledgeCount;
+            }, 0);
+            console.log('Total backers calculated:', backers);
+
             setError(null);
         } catch (err) {
             console.error('Error fetching projects:', err);
